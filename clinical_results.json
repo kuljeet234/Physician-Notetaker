@@ -1,0 +1,42 @@
+{
+  "medical_summary": {
+    "Patient_Name": "Jones",
+    "Symptoms": [
+      "Back Pain",
+      "Backache",
+      "Neck Pain",
+      "Stiffness"
+    ],
+    "Diagnosis": "whiplash injury",
+    "Treatment": [
+      "Painkiller",
+      "Painkillers"
+    ],
+    "Current_Status": "Under observation",
+    "Prognosis": "I'm doing better",
+    "Confidence_Score": 0.9
+  },
+  "sentiment_analysis": {
+    "Sentiment": "Anxious",
+    "Intent": "Reporting Symptoms",
+    "Confidence": 0.913158118724823
+  },
+  "soap_note": {
+    "Subjective": {
+      "Chief_Complaint": "Good morning, doctor. I'm doing better, but I still have some discomfort now and then.",
+      "History_of_Present_Illness": "Good morning, doctor. I'm doing better, but I still have some discomfort now and then. Yes, it was on September 1st, around 12:30 in the afternoon. I was driving from Cheadle Hulme to Manchester when I had to stop in traffic. Out of nowhere, another car hit me from behind, which pushed my car into the one in front. Yes, I always do. At first, I was just shocked. But then I realized I had hit my head on the steering wheel, and I could feel pain in my neck and back almost right away. Yes, I went t"
+    },
+    "Objective": {
+      "Physical_Exam": "Not documented",
+      "Observations": "Patient appears stable"
+    },
+    "Assessment": {
+      "Diagnosis": "whiplash injury",
+      "Severity": "Mild, improving"
+    },
+    "Plan": {
+      "Treatment_Plan": "Continue current management",
+      "Follow-Up": "Follow-up appointment to be scheduled"
+    }
+  }
+}
