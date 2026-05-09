@@ -18,8 +18,6 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import spacy
-import warnings
-warnings.filterwarnings('ignore')
 
 
 @dataclass
@@ -171,7 +169,8 @@ class EnhancedClinicalExtractor:
                 aggregation_strategy="max",
                 device=self.device
             )
-        except:
+        except Exception as exc:
+            print(f"  alvaroalon2/biobert_diseases_ner unavailable ({exc}); falling back.")
             self.medical_ner = pipeline(
                 "ner",
                 model="d4data/biomedical-ner-all",
@@ -195,11 +194,12 @@ class EnhancedClinicalExtractor:
 
         try:
             self.nlp = spacy.load("en_core_web_trf")
-        except:
+        except Exception:
+            # Transformer-based spaCy model isn't installed; fall back to small.
             self.nlp = spacy.load("en_core_web_sm")
 
         self.validator = MedicalEntityValidator(self.sentence_model)
-        print("✓ Models loaded\n")
+        print("[OK] Models loaded\n")
 
     def extract_symptoms_robust(self, text: str) -> Set[str]:
         symptoms = set()
@@ -307,7 +307,8 @@ class EnhancedClinicalExtractor:
                     answer = re.sub(r'^(a|an|the)\s+', '', answer, flags=re.IGNORECASE)
                     if len(answer) > 5:
                         extracted[key] = answer
-            except:
+            except Exception:
+                # QA pipeline failed for this question; skip and try the next one.
                 continue
 
         return extracted
@@ -491,7 +492,8 @@ class SOAPNoteGenerator:
             result = self.qa(question=question, context=text, max_answer_len=100)
             if result['score'] > 0.25:
                 return result['answer'].strip()
-        except:
+        except Exception:
+            # QA pipeline failure on this question; treat as no answer.
             pass
         return ""
 
@@ -572,16 +574,14 @@ class ClinicalTranscriptionPipeline:
         self.sentiment_analyzer = ClinicalSentimentAnalyzer(use_gpu=use_gpu)
         self.soap_generator = SOAPNoteGenerator()
 
-    def save_results(self, results, filename="results.json"):
-        # Get the current directory where the script is running
+    def save_results(self, results: Dict, filename: str = "clinical_results.json") -> str:
+        """Persist results next to this script (not the caller's CWD)."""
         current_dir = os.path.dirname(os.path.abspath(__file__))
         save_path = os.path.join(current_dir, filename)
-
-        # Save JSON results
         with open(save_path, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2, ensure_ascii=False)
-
-        print(f"\nResults saved successfully at: {save_path}")
+        print(f"\n[saved] {save_path}")
+        return save_path
 
     def process_transcript(self, transcript: str, patient_text: str = None) -> Dict:
         print("PROCESSING TRANSCRIPT\n")
@@ -598,7 +598,7 @@ class ClinicalTranscriptionPipeline:
 
         soap = self.soap_generator.generate(transcript)
 
-        print("\n✓ PROCESSING COMPLETE\n")
+        print("\n[done] PROCESSING COMPLETE\n")
 
         return {
             "medical_summary": asdict(summary),
@@ -606,13 +606,10 @@ class ClinicalTranscriptionPipeline:
             "soap_note": asdict(soap)
         }
 
-    def save_results(self, results: Dict, filename: str = "clinical_results.json"):
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(results, f, indent=2, ensure_ascii=False)
-        print(f"✅ Results saved to {filename}")
-
 
 if __name__ == "__main__":
+    import warnings
+    warnings.filterwarnings('ignore')
     SAMPLE = """
 Physician: Good morning, Ms. Jones. How are you feeling today?
 Patient: Good morning, doctor. I'm doing better, but I still have some discomfort now and then.
@@ -660,7 +657,7 @@ Physician: You're very welcome, Ms. Jones. Take care, and don't hesitate to reac
     print(json.dumps(results['soap_note'], indent=2))
 
 
-    print("✓ COMPLETE")
+    print("[done] COMPLETE")
 
 
     pipeline.save_results(results)
